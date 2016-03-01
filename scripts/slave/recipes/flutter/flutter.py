@@ -54,6 +54,12 @@ def TestFlutterPackagesAndExamples(api):
 
   _flutter_test('examples/stocks')
 
+def TestCreateAndLaunch(api):
+  with MakeTempDir(api) as temp_dir:
+    api.step('test create', ['flutter', 'create', '--with-driver-test',
+        'sample_app'], cwd=temp_dir)
+    app_path = checkout.join('sample_app')
+    api.step('drive sample_app', ['flutter', 'drive'], cwd=app_path)
 
 # TODO(eseidel): Would be nice to have this on api.path or api.file.
 @contextlib.contextmanager
@@ -131,8 +137,8 @@ def RunSteps(api):
       recursive=True, set_got_revision=True)
   checkout = api.path['checkout']
 
-  api.step('download android tools',
-      [checkout.join('infra', 'download_android_tools.py')])
+  # api.step('download android tools',
+  #     [checkout.join('infra', 'download_android_tools.py')])
 
   dart_bin = checkout.join('bin', 'cache', 'dart-sdk', 'bin')
   flutter_bin = checkout.join('bin')
@@ -156,16 +162,17 @@ def RunSteps(api):
     AnalyzeFlutter(api)
     TestFlutterPackagesAndExamples(api)
     BuildExamples(api, git_hash)
+    TestCreateAndLaunch(api)
 
     # TODO(eseidel): We only want to generate one copy of the docs at a time
     # otherwise multiple rsyncs could race, causing badness. We'll eventually
     # need both a lock on the bucket, as well as some assurance that we're
     # always moving the docs forward. Possibly by using a separate builder.
     # Until then, only generate on linux to reduce the chance of race.
-    if api.platform.is_linux:
+    # if api.platform.is_linux:
       # TODO(eseidel): Is there a way for GenerateDocs to read PUB_CACHE from
       # the env instead of me passing it in?
-      GenerateDocs(api, pub_cache)
+      # GenerateDocs(api, pub_cache)
 
 
 def GenTests(api):
