@@ -137,7 +137,7 @@ def BuildExamples(api, git_hash):
 def RunSteps(api):
   # buildbot sets 'clobber' to the empty string which is falsey, check with 'in'
   if 'clobber' in api.properties:
-    api.file.rmcontents('everything', api.path['slave_build'])
+    api.file.rmcontents('everything', api.path['subordinate_build'])
 
   git_hash = api.git.checkout(
       'https://chromium.googlesource.com/external/github.com/flutter/flutter',
@@ -152,11 +152,11 @@ def RunSteps(api):
   # TODO(eseidel): This is named exactly '.pub-cache' as a hack around
   # a regexp in flutter_tools analyze.dart which is in turn a hack around:
   # https://github.com/dart-lang/sdk/issues/25722
-  pub_cache = api.path['slave_build'].join('.pub-cache')
+  pub_cache = api.path['subordinate_build'].join('.pub-cache')
   env = {
     'PATH': api.path.pathsep.join((str(flutter_bin), str(dart_bin),
         '%(PATH)s')),
-    # Setup our own pub_cache to not affect other slaves on this machine.
+    # Setup our own pub_cache to not affect other subordinates on this machine.
     'PUB_CACHE': pub_cache,
     'ANDROID_HOME': checkout.join('infra', 'android_tools'),
   }

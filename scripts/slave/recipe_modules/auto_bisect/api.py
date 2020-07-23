@@ -127,7 +127,7 @@ class AutoBisectApi(recipe_api.RecipeApi):
         'Preparing for Bisection',
         script=self.m.path['checkout'].join(
             'tools', 'prepare-bisect-perf-regression.py'),
-        args=['-w', self.m.path['slave_build']])
+        args=['-w', self.m.path['subordinate_build']])
     args = []
 
     kwargs['allow_subannotations'] = True
@@ -145,7 +145,7 @@ class AutoBisectApi(recipe_api.RecipeApi):
     ]
     self.m.chromium.runtest(
         self.m.path['checkout'].join('tools', 'run-bisect-perf-regression.py'),
-        ['-w', self.m.path['slave_build']] + args,
+        ['-w', self.m.path['subordinate_build']] + args,
         name='Running Bisection',
         xvfb=True, **kwargs)
 
@@ -170,9 +170,9 @@ class AutoBisectApi(recipe_api.RecipeApi):
   def start_test_run_for_bisect(self, api, update_step, bot_db,
                                 test_config_params, run_locally=False,
                                 skip_download=False):
-    mastername = api.properties.get('mastername')
+    mainname = api.properties.get('mainname')
     buildername = api.properties.get('buildername')
-    bot_config = bot_db.get_bot_config(mastername, buildername)
+    bot_config = bot_db.get_bot_config(mainname, buildername)
     build_archive_url = test_config_params['parent_build_archive_url']
     if not run_locally:
       api.bisect_tester.upload_job_url()
@@ -213,7 +213,7 @@ class AutoBisectApi(recipe_api.RecipeApi):
               args=[zip_dir, build_dir])
       else:
         api.chromium_tests.download_and_unzip_build(
-            mastername, buildername, update_step, bot_db,
+            mainname, buildername, update_step, bot_db,
             build_archive_url=build_archive_url,
             build_revision=test_config_params['parent_got_revision'],
             override_bot_type='tester')
@@ -223,11 +223,11 @@ class AutoBisectApi(recipe_api.RecipeApi):
     if not tests:  # pragma: no cover
       return
     api.chromium_tests.configure_swarming(  # pragma: no cover
-        'chromium', precommit=False, mastername=mastername)
+        'chromium', precommit=False, mainname=mainname)
     test_runner = api.chromium_tests.create_test_runner(api, tests)
 
     bot_config_object = api.chromium_tests.create_bot_config_object(
-        mastername, buildername)
+        mainname, buildername)
     with api.chromium_tests.wrap_chromium_tests(bot_config_object, tests):
       if api.chromium.c.TARGET_PLATFORM == 'android' and not skip_download:
         if bot_config.get('webview'):
@@ -256,7 +256,7 @@ class AutoBisectApi(recipe_api.RecipeApi):
       kwargs: Args to use only for legacy bisect.
     """
     if bot_db is None:  # pragma: no cover
-      self.bot_db = api.chromium_tests.create_bot_db_from_master_dict(
+      self.bot_db = api.chromium_tests.create_bot_db_from_main_dict(
           '', None, None)
     else:
       self.bot_db = bot_db

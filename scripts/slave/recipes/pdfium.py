@@ -127,84 +127,84 @@ def GenTests(api):
   yield (
       api.test('win') +
       api.platform('win', 64) +
-      api.properties(mastername="client.pdfium",
+      api.properties(mainname="client.pdfium",
                      buildername='windows',
-                     slavename="test_slave")
+                     subordinatename="test_subordinate")
   )
   yield (
       api.test('linux') +
       api.platform('linux', 64) +
-      api.properties(mastername="client.pdfium",
+      api.properties(mainname="client.pdfium",
                      buildername='linux',
-                     slavename="test_slave")
+                     subordinatename="test_subordinate")
   )
   yield (
       api.test('mac') +
       api.platform('mac', 64) +
-      api.properties(mastername="client.pdfium",
+      api.properties(mainname="client.pdfium",
                      buildername='mac',
-                     slavename="test_slave")
+                     subordinatename="test_subordinate")
   )
 
   yield (
       api.test('win_no_v8') +
       api.platform('win', 64) +
       api.properties(v8=False,
-                     mastername="client.pdfium",
+                     mainname="client.pdfium",
                      buildername='windows',
-                     slavename="test_slave")
+                     subordinatename="test_subordinate")
   )
   yield (
       api.test('linux_no_v8') +
       api.platform('linux', 64) +
       api.properties(v8=False,
-                     mastername="client.pdfium",
+                     mainname="client.pdfium",
                      buildername='linux',
-                     slavename="test_slave")
+                     subordinatename="test_subordinate")
   )
   yield (
       api.test('mac_no_v8') +
       api.platform('mac', 64) +
       api.properties(v8=False,
-                     mastername="client.pdfium",
+                     mainname="client.pdfium",
                      buildername='mac',
-                     slavename="test_slave")
+                     subordinatename="test_subordinate")
   )
 
   yield (
       api.test('win_xfa') +
       api.platform('win', 64) +
       api.properties(xfa=True,
-                     mastername="client.pdfium",
+                     mainname="client.pdfium",
                      buildername='windows_xfa',
-                     slavename="test_slave")
+                     subordinatename="test_subordinate")
   )
 
   yield (
       api.test('linux_xfa') +
       api.platform('linux', 64) +
       api.properties(xfa=True,
-                     mastername="client.pdfium",
+                     mainname="client.pdfium",
                      buildername='linux_xfa',
-                     slavename="test_slave")
+                     subordinatename="test_subordinate")
   )
 
   yield (
       api.test('mac_xfa') +
       api.platform('mac', 64) +
       api.properties(xfa=True,
-                     mastername="client.pdfium",
+                     mainname="client.pdfium",
                      buildername='mac_xfa',
-                     slavename="test_slave")
+                     subordinatename="test_subordinate")
   )
 
   yield (
       api.test('linux_asan') +
       api.platform('linux', 64) +
       api.properties(memory_tool='asan',
-                     mastername="client.pdfium",
+                     mainname="client.pdfium",
                      buildername='linux_asan',
-                     slavename="test_slave")
+                     subordinatename="test_subordinate")
   )
 
   yield (
@@ -212,9 +212,9 @@ def GenTests(api):
       api.platform('win', 64) +
       api.properties(xfa=True,
                      memory_tool='drmemory',
-                     mastername="client.pdfium",
+                     mainname="client.pdfium",
                      buildername='drm_win_xfa',
-                     slavename="test_slave")
+                     subordinatename="test_subordinate")
   )
 
   yield (
@@ -222,7 +222,7 @@ def GenTests(api):
       api.platform('linux', 64) +
       api.properties(xfa=True,
                      memory_tool='asan',
-                     mastername="client.pdfium",
+                     mainname="client.pdfium",
                      buildername='linux_xfa_asan',
-                     slavename="test_slave")
+                     subordinatename="test_subordinate")
   )

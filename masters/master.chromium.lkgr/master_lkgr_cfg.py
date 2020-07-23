@@ -2,18 +2,18 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-from master import gitiles_poller
-from master import master_config
-from master.factory import annotator_factory
-from master.factory import chromium_factory
+from main import gitiles_poller
+from main import main_config
+from main.factory import annotator_factory
+from main.factory import chromium_factory
 
-import master_site_config
+import main_site_config
 
-ActiveMaster = master_site_config.ChromiumLKGR
+ActiveMain = main_site_config.ChromiumLKGR
 
 defaults = {}
 
-helper = master_config.Helper(defaults)
+helper = main_config.Helper(defaults)
 B = helper.Builder
 F = helper.Factory
 S = helper.Scheduler
@@ -40,7 +40,7 @@ B('Win', 'win_full', 'compile|windows', 'chromium_lkgr')
 F('win_full', win().ChromiumFactory(
     clobber=True,
     project='all.sln',
-    factory_properties={'archive_build': ActiveMaster.is_production_host,
+    factory_properties={'archive_build': ActiveMain.is_production_host,
                         'gs_bucket': 'gs://chromium-browser-continuous',
                         'gs_acl': 'public-read',
                         'gclient_env': {
@@ -55,7 +55,7 @@ F('win_x64_full', win_out().ChromiumFactory(
     target='Release_x64',
     options=['--build-tool=ninja', '--', 'all'],
     factory_properties={
-      'archive_build': ActiveMaster.is_production_host,
+      'archive_build': ActiveMain.is_production_host,
       'gclient_env': {
         'GYP_DEFINES': 'component=static_library target_arch=x64',
         'GYP_LINK_CONCURRENCY_MAX': '4',
@@ -75,7 +75,7 @@ F('win_asan_rel', win_out().ChromiumASANFactory(
     clobber=True,
     options=['--build-tool=ninja', '--', 'chromium_builder_asan'],
     factory_properties={
-       'cf_archive_build': ActiveMaster.is_production_host,
+       'cf_archive_build': ActiveMain.is_production_host,
        'cf_archive_name': 'asan',
        'gs_bucket': 'gs://chromium-browser-asan',
        'gs_acl': 'public-read',
@@ -88,7 +88,7 @@ F('win_asan_rel_cov', win_out().ChromiumASANFactory(
     clobber=True,
     options=['--build-tool=ninja', '--', 'chromium_builder_asan'],
     factory_properties={
-       'cf_archive_build': ActiveMaster.is_production_host,
+       'cf_archive_build': ActiveMain.is_production_host,
        'cf_archive_name': 'asan-coverage',
        'gs_bucket': 'gs://chromium-browser-asan',
        'gs_acl': 'public-read',
@@ -107,7 +107,7 @@ F('win_asan_rel_media', win_out().ChromiumASANFactory(
     clobber=True,
     options=['--build-tool=ninja', '--', 'chromium_builder_asan'],
     factory_properties={
-       'cf_archive_build': ActiveMaster.is_production_host,
+       'cf_archive_build': ActiveMain.is_production_host,
        'cf_archive_name': 'asan',
        'gs_bucket': 'gs://chrome-test-builds/media',
        'gclient_env': {'GYP_DEFINES': asan_win_media_gyp}}))
@@ -125,7 +125,7 @@ asan_mac_gyp = 'asan=1 v8_enable_verify_heap=1 '
 B('Mac', 'mac_full', 'compile|testers', 'chromium_lkgr')
 F('mac_full', mac().ChromiumFactory(
     clobber=True,
-    factory_properties={'archive_build': ActiveMaster.is_production_host,
+    factory_properties={'archive_build': ActiveMain.is_production_host,
                         'gs_bucket': 'gs://chromium-browser-continuous',
                         'gs_acl': 'public-read',}))
 
@@ -134,7 +134,7 @@ F('mac_asan_rel', linux().ChromiumASANFactory(
     clobber=True,
     options=['--compiler=goma-clang', '--', '-target', 'chromium_builder_asan'],
     factory_properties={
-       'cf_archive_build': ActiveMaster.is_production_host,
+       'cf_archive_build': ActiveMain.is_production_host,
        'cf_archive_name': 'asan',
        'gs_bucket': 'gs://chromium-browser-asan',
        'gs_acl': 'public-read',
@@ -145,7 +145,7 @@ F('mac_asan_rel_media', linux().ChromiumASANFactory(
     clobber=True,
     options=['--compiler=goma-clang', '--', '-target', 'chromium_builder_asan'],
     factory_properties={
-       'cf_archive_build': ActiveMaster.is_production_host,
+       'cf_archive_build': ActiveMain.is_production_host,
        'cf_archive_name': 'asan',
        'gs_bucket': 'gs://chrome-test-builds/media',
        'gclient_env': {'GYP_DEFINES': asan_mac_gyp + media_gyp}}))
@@ -156,7 +156,7 @@ F('mac_asan_dbg', linux().ChromiumASANFactory(
     target='Debug',
     options=['--compiler=goma-clang', '--', '-target', 'chromium_builder_asan'],
     factory_properties={
-       'cf_archive_build': ActiveMaster.is_production_host,
+       'cf_archive_build': ActiveMain.is_production_host,
        'cf_archive_name': 'asan',
        'gs_bucket': 'gs://chromium-browser-asan',
        'gs_acl': 'public-read',
@@ -170,7 +170,7 @@ F('mac_asan_dbg', linux().ChromiumASANFactory(
 B('Linux', 'linux_full', 'compile|testers', 'chromium_lkgr')
 F('linux_full', linux().ChromiumFactory(
     clobber=True,
-    factory_properties={'archive_build': ActiveMaster.is_production_host,
+    factory_properties={'archive_build': ActiveMain.is_production_host,
                         'gs_bucket': 'gs://chromium-browser-continuous',
                         'gs_acl': 'public-read',}))
 
@@ -178,7 +178,7 @@ B('Linux x64', 'linux64_full', 'compile|testers', 'chromium_lkgr')
 F('linux64_full', linux().ChromiumFactory(
     clobber=True,
     factory_properties={
-        'archive_build': ActiveMaster.is_production_host,
+        'archive_build': ActiveMain.is_production_host,
         'gs_bucket': 'gs://chromium-browser-continuous',
         'gs_acl': 'public-read',
         'gclient_env': {'GYP_DEFINES':'target_arch=x64'}}))
@@ -192,7 +192,7 @@ F('linux_asan_rel', linux().ChromiumASANFactory(
     clobber=True,
     options=['--compiler=goma-clang', 'chromium_builder_asan'],
     factory_properties={
-       'cf_archive_build': ActiveMaster.is_production_host,
+       'cf_archive_build': ActiveMain.is_production_host,
        'cf_archive_name': 'asan',
        'gs_bucket': 'gs://chromium-browser-asan',
        'gs_acl': 'public-read',
@@ -206,7 +206,7 @@ F('linux_asan_rel_media', linux().ChromiumASANFactory(
     clobber=True,
     options=['--compiler=goma-clang', 'chromium_builder_asan'],
     factory_properties={
-       'cf_archive_build': ActiveMaster.is_production_host,
+       'cf_archive_build': ActiveMain.is_production_host,
        'cf_archive_name': 'asan',
        'gs_bucket': 'gs://chrome-test-builds/media',
        'gclient_env': {'GYP_DEFINES': asan_rel_gyp +
@@ -222,7 +222,7 @@ F('linux_asan_rel_sym', linux().ChromiumASANFactory(
     clobber=True,
     options=['--compiler=goma-clang', 'chromium_builder_asan'],
     factory_properties={
-       'cf_archive_build': ActiveMaster.is_production_host,
+       'cf_archive_build': ActiveMain.is_production_host,
        'cf_archive_name': 'asan-symbolized',
        'gs_bucket': 'gs://chromium-browser-asan',
        'gs_acl': 'public-read',
@@ -236,7 +236,7 @@ F('linux_asan_dbg', linux().ChromiumASANFactory(
     target='Debug',
     options=['--compiler=goma-clang', 'chromium_builder_asan'],
     factory_properties={
-       'cf_archive_build': ActiveMaster.is_production_host,
+       'cf_archive_build': ActiveMain.is_production_host,
        'cf_archive_name': 'asan',
        'gs_bucket': 'gs://chromium-browser-asan',
        'gs_acl': 'public-read',
@@ -251,7 +251,7 @@ F('linux_chromiumos_asan_rel', linux().ChromiumASANFactory(
     clobber=True,
     options=['--compiler=goma-clang', 'chromium_builder_asan'],
     factory_properties={
-       'cf_archive_build': ActiveMaster.is_production_host,
+       'cf_archive_build': ActiveMain.is_production_host,
        'cf_archive_name': 'asan',
        'cf_archive_subdir_suffix': 'chromeos',
        'gs_bucket': 'gs://chromium-browser-asan',
@@ -277,7 +277,7 @@ F('linux_asan_dbg_ia32_v8_arm', linux().ChromiumASANFactory(
     target='Debug',
     options=['--compiler=goma-clang', 'chromium_builder_asan'],
     factory_properties={
-       'cf_archive_build': ActiveMaster.is_production_host,
+       'cf_archive_build': ActiveMain.is_production_host,
        'cf_archive_subdir_suffix': 'v8-arm',
        'cf_archive_name': 'asan-v8-arm',
        'gs_bucket': 'gs://chromium-browser-asan',
@@ -291,7 +291,7 @@ F('linux_asan_rel_ia32_v8_arm', linux().ChromiumASANFactory(
     clobber=True,
     options=['--compiler=goma-clang', 'chromium_builder_asan'],
     factory_properties={
-       'cf_archive_build': ActiveMaster.is_production_host,
+       'cf_archive_build': ActiveMain.is_production_host,
        'cf_archive_subdir_suffix': 'v8-arm',
        'cf_archive_name': 'asan-v8-arm',
        'gs_bucket': 'gs://chromium-browser-asan',
@@ -305,7 +305,7 @@ F('linux_asan_rel_media_ia32_v8_arm', linux().ChromiumASANFactory(
     clobber=True,
     options=['--compiler=goma-clang', 'chromium_builder_asan'],
     factory_properties={
-       'cf_archive_build': ActiveMaster.is_production_host,
+       'cf_archive_build': ActiveMain.is_production_host,
        'cf_archive_subdir_suffix': 'v8-arm',
        'cf_archive_name': 'asan-v8-arm',
        'gs_bucket': 'gs://chrome-test-builds/media',
@@ -318,7 +318,7 @@ F('linux_asan_rel_sym_ia32_v8_arm', linux().ChromiumASANFactory(
     clobber=True,
     options=['--compiler=goma-clang', 'chromium_builder_asan'],
     factory_properties={
-       'cf_archive_build': ActiveMaster.is_production_host,
+       'cf_archive_build': ActiveMain.is_production_host,
        'cf_archive_subdir_suffix': 'v8-arm',
        'cf_archive_name': 'asan-symbolized-v8-arm',
        'gs_bucket': 'gs://chromium-browser-asan',
@@ -335,7 +335,7 @@ F('linux_tsan_rel', linux().ChromiumFactory(
     clobber=True,
     options=['--compiler=goma-clang', 'chromium_builder_asan'],
     factory_properties={
-       'cf_archive_build': ActiveMaster.is_production_host,
+       'cf_archive_build': ActiveMain.is_production_host,
        'cf_archive_name': 'tsan',
        'gs_bucket': 'gs://chromium-browser-tsan',
        'gs_acl': 'public-read',
@@ -348,7 +348,7 @@ F('linux_tsan_dbg', linux().ChromiumFactory(
     target='Debug',
     options=['--compiler=goma-clang', 'chromium_builder_asan'],
     factory_properties={
-       'cf_archive_build': ActiveMaster.is_production_host,
+       'cf_archive_build': ActiveMain.is_production_host,
        'cf_archive_name': 'tsan',
        'gs_bucket': 'gs://chromium-browser-tsan',
        'gs_acl': 'public-read',
@@ -367,7 +367,7 @@ F('linux_msan_rel_no_origins', linux().ChromiumFactory(
     target='Release',
     options=['--compiler=goma-clang', 'chromium_builder_asan'],
     factory_properties={
-       'cf_archive_build': ActiveMaster.is_production_host,
+       'cf_archive_build': ActiveMain.is_production_host,
        'cf_archive_name': 'msan-no-origins',
        'gs_bucket': 'gs://chromium-browser-msan',
        'gs_acl': 'public-read',
@@ -380,7 +380,7 @@ F('linux_msan_rel_chained_origins', linux().ChromiumFactory(
     target='Release',
     options=['--compiler=goma-clang', 'chromium_builder_asan'],
     factory_properties={
-       'cf_archive_build': ActiveMaster.is_production_host,
+       'cf_archive_build': ActiveMain.is_production_host,
        'cf_archive_name': 'msan-chained-origins',
        'gs_bucket': 'gs://chromium-browser-msan',
        'gs_acl': 'public-read',
@@ -402,7 +402,7 @@ F('linux_ubsan_rel', linux().ChromiumFactory(
     target='Release',
     options=['--compiler=goma-clang', 'chromium_builder_asan'],
     factory_properties={
-       'cf_archive_build': ActiveMaster.is_production_host,
+       'cf_archive_build': ActiveMain.is_production_host,
        'cf_archive_name': 'ubsan',
        'gs_bucket': 'gs://chromium-browser-ubsan',
        'gs_acl': 'public-read',
@@ -416,7 +416,7 @@ F('linux_ubsan_vptr_rel', linux().ChromiumFactory(
     target='Release',
     options=['--compiler=goma-clang', 'chromium_builder_asan'],
     factory_properties={
-       'cf_archive_build': ActiveMaster.is_production_host,
+       'cf_archive_build': ActiveMain.is_production_host,
        'cf_archive_subdir_suffix': 'vptr',
        'cf_archive_name': 'ubsan-vptr',
        'gs_bucket': 'gs://chromium-browser-ubsan',
@@ -443,7 +443,7 @@ F('android', linux_android().ChromiumAnnotationFactory(
     ))
 
 
-def Update(_config, active_master, c):
+def Update(_config, active_main, c):
   lkgr_poller = gitiles_poller.GitilesPoller(
       'https://chromium.googlesource.com/chromium/src',
       branches=['lkgr'])

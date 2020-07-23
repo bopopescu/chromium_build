@@ -11,7 +11,7 @@ import test_env  # pylint: disable=W0611
 import time
 import unittest
 from common import find_depot_tools  # pylint: disable=W0611
-from tools import slavedisk
+from tools import subordinatedisk
 from testing_support import auto_stub
 
 COMMUNICATE = None
@@ -38,7 +38,7 @@ def MockPrint(s=""):
 def MockStat(f):
   return STATS[f]
 
-class SlaveDiskTest(auto_stub.TestCase):
+class SubordinateDiskTest(auto_stub.TestCase):
   def setUp(self):
     global OUTPUT
     OUTPUT = ""
@@ -52,7 +52,7 @@ class SlaveDiskTest(auto_stub.TestCase):
     self.mock(os.path, 'exists', self.MockExists)
     self.mock(subprocess, 'Popen', self.MockPopen)
     self.mock(time, 'time', self.MockTime)
-    super(SlaveDiskTest, self).setUp()
+    super(SubordinateDiskTest, self).setUp()
 
   def MockExists(self, f):
     return True
@@ -70,7 +70,7 @@ class SlaveDiskTest(auto_stub.TestCase):
     return MockDf()
 
   def tearDown(self):
-    super(SlaveDiskTest, self).tearDown()
+    super(SubordinateDiskTest, self).tearDown()
 
   def test_full(self):
     """Test what happens when the disk is full."""
@@ -80,10 +80,10 @@ class SlaveDiskTest(auto_stub.TestCase):
     COMMUNICATE = MockCommunicate(100)
     FILES = ['foo']
     STATS = dict(foo=MockStatbuf(0))
-    rv = slavedisk.main(stat=MockStat, Print=MockPrint)
+    rv = subordinatedisk.main(stat=MockStat, Print=MockPrint)
 
     self.assertEqual(rv, 0)
-    self.assertIn("rm -rf /b/build/slave/foo # 30 days old", OUTPUT)
+    self.assertIn("rm -rf /b/build/subordinate/foo # 30 days old", OUTPUT)
 
   def test_not_full(self):
     """Test what happens when the disk is NOT full."""
@@ -93,10 +93,10 @@ class SlaveDiskTest(auto_stub.TestCase):
     COMMUNICATE = MockCommunicate(50)
     FILES = ['foo']
     STATS = dict(foo=MockStatbuf(0))
-    rv = slavedisk.main(stat=MockStat, Print=MockPrint)
+    rv = subordinatedisk.main(stat=MockStat, Print=MockPrint)
 
     self.assertEqual(rv, 0)
-    self.assertNotIn("rm -rf /b/build/slave/foo # 30 days old", OUTPUT)
+    self.assertNotIn("rm -rf /b/build/subordinate/foo # 30 days old", OUTPUT)
 
   def test_not_full_force(self):
     global COMMUNICATE
@@ -105,10 +105,10 @@ class SlaveDiskTest(auto_stub.TestCase):
     COMMUNICATE = MockCommunicate(50)
     FILES = ['foo']
     STATS = dict(foo=MockStatbuf(0))
-    rv = slavedisk.main(force=True, stat=MockStat, Print=MockPrint)
+    rv = subordinatedisk.main(force=True, stat=MockStat, Print=MockPrint)
 
     self.assertEqual(rv, 0)
-    self.assertIn("rm -rf /b/build/slave/foo # 30 days old", OUTPUT)
+    self.assertIn("rm -rf /b/build/subordinate/foo # 30 days old", OUTPUT)
 
   def test_filematching(self):
     """Test the code that matches build directories."""
@@ -119,7 +119,7 @@ class SlaveDiskTest(auto_stub.TestCase):
     FILES = ['invalid@name', 'not_a_dir', 'too_young']
     STATS = dict(not_a_dir=MockStatbuf(0, 0),
                  too_young=MockStatbuf(86400 * 30 - 1))
-    rv = slavedisk.main(stat=MockStat, Print=MockPrint)
+    rv = subordinatedisk.main(stat=MockStat, Print=MockPrint)
 
     # None of the three files should be eligible for deletion;
     # the first has a bad name, the second isn't a directory,

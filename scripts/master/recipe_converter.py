@@ -2,11 +2,11 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import master.chromium_step
-import master.log_parser.retcode_command
-import master.factory.commands
-import master.factory.drmemory_factory
-import master.master_utils
+import main.chromium_step
+import main.log_parser.retcode_command
+import main.factory.commands
+import main.factory.drmemory_factory
+import main.main_utils
 import buildbot.process.properties
 import buildbot.steps.transfer
 import buildbot.steps.shell
@@ -22,7 +22,7 @@ import datetime
 # Terrible hack; to enable converting triggers.
 _GLOBAL_BUILDMASTER_CONFIG = None
 
-_master_builder_map = {
+_main_builder_map = {
     'Chromium GPU': ['Android Debug (Nexus 5)',
                      'Android Debug (Nexus 6)',
                      'Android Debug (Nexus 9)',
@@ -81,7 +81,7 @@ _master_builder_map = {
             ]
 }
 
-_master_name_map = {
+_main_name_map = {
     'Chromium GPU': 'chromium.gpu',
     'Chromium ChromeDriver': 'chromium.chromedriver',
     'Chromium GPU FYI': 'chromium.gpu.fyi',
@@ -118,48 +118,48 @@ _step_signatures = {
                        'workdir': '../../..'
                      }
                     ),
-  'bot_update': (master.chromium_step.AnnotatedCommand,
+  'bot_update': (main.chromium_step.AnnotatedCommand,
                  {
                    'command': ['python', '-u',
-                               '../../../scripts/slave/bot_update.py'],
+                               '../../../scripts/subordinate/bot_update.py'],
                    'description': 'bot_update',
                    'name': 'bot_update',
                    'workdir': 'build',
                  }
                 ),
-  'win_bot_update': (master.chromium_step.AnnotatedCommand,
+  'win_bot_update': (main.chromium_step.AnnotatedCommand,
                  {
                    'command': ['python', '-u',
-                               '..\\..\\..\\scripts\\slave\\bot_update.py'],
+                               '..\\..\\..\\scripts\\subordinate\\bot_update.py'],
                    'description': 'bot_update',
                    'name': 'bot_update',
                    'workdir': 'build',
                  }
                 ),
-  'cleanup_temp': (master.log_parser.retcode_command.ReturnCodeCommand,
+  'cleanup_temp': (main.log_parser.retcode_command.ReturnCodeCommand,
                    {
                      'command': ['python',
-                                 '../../../scripts/slave/cleanup_temp.py'],
+                                 '../../../scripts/subordinate/cleanup_temp.py'],
                      'description': 'cleanup_temp',
                      'name': 'cleanup_temp',
                    }
                   ),
-  'win_cleanup_temp': (master.log_parser.retcode_command.ReturnCodeCommand,
+  'win_cleanup_temp': (main.log_parser.retcode_command.ReturnCodeCommand,
       {
         'command': ['python',
-                    '..\\..\\..\\scripts\\slave\\cleanup_temp.py'],
+                    '..\\..\\..\\scripts\\subordinate\\cleanup_temp.py'],
         'description': 'cleanup_temp',
         'name': 'cleanup_temp',
       }
     ),
-  'gclient_update':      (master.chromium_step.GClient,
+  'gclient_update':      (main.chromium_step.GClient,
                           {
                             'mode': 'update',
                           }),
   'gclient_safe_revert': (buildbot.steps.shell.ShellCommand,
                           {
                             'command': ['python',
-                              '../../../scripts/slave/gclient_safe_revert.py',
+                              '../../../scripts/subordinate/gclient_safe_revert.py',
                               '.', 'gclient'],
                             'description': 'gclient_revert',
                             'name': 'gclient_revert',
@@ -168,74 +168,74 @@ _step_signatures = {
     ),
   'win_gclient_safe_revert': (buildbot.steps.shell.ShellCommand,
       {
-        'command': ['python_slave',
-          '..\\..\\..\\scripts\\slave\\gclient_safe_revert.py',
+        'command': ['python_subordinate',
+          '..\\..\\..\\scripts\\subordinate\\gclient_safe_revert.py',
           '.', 'gclient.bat'],
         'description': 'gclient_revert',
         'name': 'gclient_revert',
         'workdir': 'build',
       }
     ),
-  'bb_run_bot':   (master.chromium_step.AnnotatedCommand,
+  'bb_run_bot':   (main.chromium_step.AnnotatedCommand,
                    {
                      'command': ['python',
                        'src/build/android/buildbot/bb_run_bot.py'],
-                     'name': 'slave_steps',
-                     'description': 'slave_steps',
+                     'name': 'subordinate_steps',
+                     'description': 'subordinate_steps',
                    }
                   ),
   'gclient_runhooks_wrapper': (buildbot.steps.shell.ShellCommand,
       {
-        'command': ['python', '../../../scripts/slave/runhooks_wrapper.py'],
+        'command': ['python', '../../../scripts/subordinate/runhooks_wrapper.py'],
         'description': 'gclient hooks',
         'env': {},
         'name': 'runhooks'
         # NOTE: locking shouldn't be required, as only one recipe is ever run on
-        # a slave at a time; specifically, a SlaveLock of type slave_exclusive
+        # a subordinate at a time; specifically, a SubordinateLock of type subordinate_exclusive
         # *should be* redundant. Noted here in case it isn't. (aneeshm)
       }
     ),
   'win_gclient_runhooks_wrapper': (buildbot.steps.shell.ShellCommand,
       {
-        'command': ['python_slave',
-                    '..\\..\\..\\scripts\\slave\\runhooks_wrapper.py'],
+        'command': ['python_subordinate',
+                    '..\\..\\..\\scripts\\subordinate\\runhooks_wrapper.py'],
         'description': 'gclient hooks',
         'env': {},
         'name': 'runhooks'
         # NOTE: locking shouldn't be required, as only one recipe is ever run on
-        # a slave at a time; specifically, a SlaveLock of type slave_exclusive
+        # a subordinate at a time; specifically, a SubordinateLock of type subordinate_exclusive
         # *should be* redundant. Noted here in case it isn't. (aneeshm)
       }
     ),
-  'chromedriver_buildbot_run': (master.chromium_step.AnnotatedCommand,
+  'chromedriver_buildbot_run': (main.chromium_step.AnnotatedCommand,
       {
         'name': 'annotated_steps',
         'description': 'annotated_steps',
         'command': ['python',
-          '../../../scripts/slave/chromium/chromedriver_buildbot_run.py'],
+          '../../../scripts/subordinate/chromium/chromedriver_buildbot_run.py'],
       }
     ),
-  'win_chromedriver_buildbot_run': (master.chromium_step.AnnotatedCommand,
+  'win_chromedriver_buildbot_run': (main.chromium_step.AnnotatedCommand,
       {
         'name': 'annotated_steps',
         'description': 'annotated_steps',
-        'command': ['python_slave',
-          '..\\..\\..\\scripts\\slave\\chromium\\chromedriver_buildbot_run.py'],
+        'command': ['python_subordinate',
+          '..\\..\\..\\scripts\\subordinate\\chromium\\chromedriver_buildbot_run.py'],
       }
     ),
   'compile_py':
-    (master.factory.commands.CompileWithRequiredSwarmTargets,
+    (main.factory.commands.CompileWithRequiredSwarmTargets,
       {
-        'command': ['python', '../../../scripts/slave/compile.py'],
+        'command': ['python', '../../../scripts/subordinate/compile.py'],
         'name': 'compile',
         'description': 'compiling',
         'descriptionDone': 'compile',
       }
     ),
   'win_compile_py':
-    (master.factory.commands.CompileWithRequiredSwarmTargets,
+    (main.factory.commands.CompileWithRequiredSwarmTargets,
       {
-        'command': ['python_slave', '..\\..\\..\\scripts\\slave\\compile.py'],
+        'command': ['python_subordinate', '..\\..\\..\\scripts\\subordinate\\compile.py'],
         'name': 'compile',
         'description': 'compiling',
         'descriptionDone': 'compile',
@@ -256,21 +256,21 @@ _step_signatures = {
         'name': 'update_scripts',
       }
     ),
-  'win_taskkill': (master.log_parser.retcode_command.ReturnCodeCommand,
+  'win_taskkill': (main.log_parser.retcode_command.ReturnCodeCommand,
       {
-        'command': ['python', '..\\..\\..\\scripts\\slave\\kill_processes.py'],
+        'command': ['python', '..\\..\\..\\scripts\\subordinate\\kill_processes.py'],
         'name': 'taskkill',
         'description': 'taskkill',
       }
     ),
-  'runtest': (master.chromium_step.AnnotatedCommand,
+  'runtest': (main.chromium_step.AnnotatedCommand,
       {
-        'command': ['python', '../../../scripts/slave/runtest.py'],
+        'command': ['python', '../../../scripts/subordinate/runtest.py'],
       }
     ),
-  'win_runtest': (master.chromium_step.AnnotatedCommand,
+  'win_runtest': (main.chromium_step.AnnotatedCommand,
       {
-        'command': ['python_slave', '..\\..\\..\\scripts\\slave\\runtest.py'],
+        'command': ['python_subordinate', '..\\..\\..\\scripts\\subordinate\\runtest.py'],
       }
     ),
   'clear_tools': (buildbot.steps.shell.ShellCommand,
@@ -282,7 +282,7 @@ _step_signatures = {
     ),
   'checkout_dynamorio': (buildbot.steps.source.Git,
       {
-        'branch': 'master',
+        'branch': 'main',
         'name': 'Checkout DynamoRIO',
         'workdir': 'dynamorio',
         'repourl': 'https://github.com/DynamoRIO/dynamorio.git',
@@ -304,15 +304,15 @@ _step_signatures = {
         'workdir': 'tools/buildbot/bot_tools',
       }
     ),
-  'win_dynamorio_nightly_suite': (master.factory.drmemory_factory.CTest,
+  'win_dynamorio_nightly_suite': (main.factory.drmemory_factory.CTest,
       {
-        'command': ['E:\\b\\build\\scripts\\slave\\drmemory\\build_env.bat',
+        'command': ['E:\\b\\build\\scripts\\subordinate\\drmemory\\build_env.bat',
           'ctest', '--timeout', '120', '-VV', '-S'],
         'name': 'nightly suite',
         'descriptionDone': 'nightly suite',
       }
     ),
-  'dynamorio_nightly_suite': (master.factory.drmemory_factory.CTest,
+  'dynamorio_nightly_suite': (main.factory.drmemory_factory.CTest,
       {
         'command': ['ctest', '--timeout', '120', '-VV', '-S',
           '../dynamorio/suite/runsuite.cmake,nightly;long;'+\
@@ -321,16 +321,16 @@ _step_signatures = {
         'name': 'nightly suite',
       }
     ),
-  'win_dynamorio_precommit':(master.factory.drmemory_factory.CTest,
+  'win_dynamorio_precommit':(main.factory.drmemory_factory.CTest,
       {
-        'command': ['E:\\b\\build\\scripts\\slave\\drmemory\\build_env.bat',
+        'command': ['E:\\b\\build\\scripts\\subordinate\\drmemory\\build_env.bat',
           'ctest', '--timeout', '120', '-VV', '-S',
           '../dynamorio/suite/runsuite.cmake'],
         'descriptionDone': 'pre-commit suite',
         'name': 'pre-commit suite',
       }
     ),
-  'dynamorio_precommit': (master.factory.drmemory_factory.CTest,
+  'dynamorio_precommit': (main.factory.drmemory_factory.CTest,
       {
         'command': ['ctest', '--timeout', '120', '-VV', '-S',
           '../dynamorio/suite/runsuite.cmake'],
@@ -341,8 +341,8 @@ _step_signatures = {
   'upload_dynamorio_docs': (buildbot.steps.transfer.DirectoryUpload,
       {
         'blocksize': 16384,
-        'masterdest': 'public_html/dr_docs',
-        'slavesrc': 'install/docs/html',
+        'maindest': 'public_html/dr_docs',
+        'subordinatesrc': 'install/docs/html',
         'workdir': 'build',
       }
     ),
@@ -374,13 +374,13 @@ _step_signatures = {
     ),
   'win_package_dynamorio': (buildbot.steps.shell.ShellCommand,
       {
-        'command': ['E:\\b\\build\\scripts\\slave\\drmemory\\build_env.bat',
+        'command': ['E:\\b\\build\\scripts\\subordinate\\drmemory\\build_env.bat',
           'ctest', '-VV', '-S'],
         'description': 'Package DynamoRIO',
         'name': 'Package DynamoRIO',
       }
     ),
-  'dartino': (master.chromium_step.AnnotatedCommand,
+  'dartino': (main.chromium_step.AnnotatedCommand,
       {
         'command': ['python', 'tools/bots/dartino.py'],
         'description': 'annotated_steps',
@@ -410,9 +410,9 @@ _step_signatures = {
         'workdir': 'build\\sdk',
       }
     ),
-  'win_dartino': (master.chromium_step.AnnotatedCommand,
+  'win_dartino': (main.chromium_step.AnnotatedCommand,
       {
-        'command': ['python_slave', 'tools/bots/dartino.py'],
+        'command': ['python_subordinate', 'tools/bots/dartino.py'],
         'description': 'annotated_steps',
         'env': {'BUILDBOT_ANNOTATED_STEPS_RUN': '1'},
         'name': 'annotated_steps',
@@ -534,7 +534,7 @@ def win_dartino_converter(step):
   rc.deps.add('recipe_engine/path')
   rc.steps.append("# dartino annotated steps step")
   env_add = ', "BUILDBOT_BUILDERNAME": api.properties["buildername"]'
-  rc.steps.append('api.step("annotated steps", ["python_slave", '+\
+  rc.steps.append('api.step("annotated steps", ["python_subordinate", '+\
       'api.path["checkout"].join("tools", "bots", "dartino.py")], '+\
       'allow_subannotations=True, env={%s%s}, ' % (repr(step[1]['env'])[1:-1],
         env_add) +\
@@ -547,11 +547,11 @@ def win_package_dynamorio_converter(step):
   rc.deps.add('recipe_engine/path')
   rc.deps.add('recipe_engine/properties')
   rc.steps.append('# Package DynamoRIO step')
-  build_env_bat = 'api.path["build"].join("scripts", "slave", "drmemory", '+\
+  build_env_bat = 'api.path["build"].join("scripts", "subordinate", "drmemory", '+\
       '"build_env.bat")'
   confstr = 'str(api.path["checkout"].join("make", "package.cmake")) + '+\
       '",build=0x" + str(api.properties["revision"])[:7]'
-  env = '{"BOTTOOLS": api.path["slave_build"].join("tools", "buildbot", '+\
+  env = '{"BOTTOOLS": api.path["subordinate_build"].join("tools", "buildbot", '+\
       '"bot_tools")}'
   rc.steps.append('api.step("Package DynamoRIO", '+\
       '[%s, "ctest", "-VV", "-S", %s], env=%s)' % (build_env_bat, confstr, env))
@@ -610,7 +610,7 @@ def upload_dynamorio_docs_converter(step):
   rc = recipe_chunk()
   rc.deps.add('gsutil')
   rc.deps.add('recipe_engine/path')
-  local_file = 'api.path["slave_build"].join("install", "docs", "html")'
+  local_file = 'api.path["subordinate_build"].join("install", "docs", "html")'
   bucket = '"chromium-dynamorio"'
   remote_dir = '"dr_docs/"'
   args = ['-r', '-m']
@@ -626,7 +626,7 @@ def dynamorio_precommit_converter(step):
   rc.steps.append('# pre-commit suite step')
   command = repr(step[1]['command'][:-1])[1:-1]
   cmake_file = 'api.path["checkout"].join("suite", "runsuite.cmake")'
-  cwd = 'api.path["slave_build"]'
+  cwd = 'api.path["subordinate_build"]'
   rc.steps.append('api.step("pre-commit suite", '+\
       '[%s, %s], cwd=%s, ok_ret="all")' % (command, cmake_file, cwd))
   return rc
@@ -637,12 +637,12 @@ def win_dynamorio_precommit_converter(step):
   rc.deps.add('recipe_engine/path')
   rc.steps.append('# build_env step')
   fmtstr = 'api.step("pre-commit suite", [%s, %s, %s],  env=%s, '+\
-      'cwd=api.path["slave_build"])'
-  command = 'api.path["build"].join("scripts", "slave", "drmemory", '+\
+      'cwd=api.path["subordinate_build"])'
+  command = 'api.path["build"].join("scripts", "subordinate", "drmemory", '+\
       '"build_env.bat")'
   args = step[1]['command'][1:-1]
   runsuite = 'api.path["checkout"].join("suite", "runsuite.cmake")'
-  env = '{"BOTTOOLS": api.path["slave_build"].join("tools", "buildbot", '+\
+  env = '{"BOTTOOLS": api.path["subordinate_build"].join("tools", "buildbot", '+\
       '"bot_tools")}'
   rc.steps.append(fmtstr % (command, repr(args)[1:-1], runsuite, env))
   return rc
@@ -651,10 +651,10 @@ def win_dynamorio_nightly_suite_converter(step):
   rc = recipe_chunk()
   rc.deps.add('recipe_engine/step')
   rc.steps.append('# dynamorio win nightly suite step')
-  fmtstr = 'api.step("%s", [%s, %s], env=%s, cwd=api.path["slave_build"])'
+  fmtstr = 'api.step("%s", [%s, %s], env=%s, cwd=api.path["subordinate_build"])'
   env = '{"BOTTOOLS": '+\
-      'api.path["slave_build"].join("tools", "buildbot", "bot_tools")}'
-  command = 'api.path["build"].join("scripts", "slave", "drmemory", '+\
+      'api.path["subordinate_build"].join("tools", "buildbot", "bot_tools")}'
+  command = 'api.path["build"].join("scripts", "subordinate", "drmemory", '+\
       '"build_env.bat")'
   step[1]['command'][-1] = step[1]['command'][-1][3:]
   command_args = repr(step[1]['command'][1:])[1:-1]
@@ -697,7 +697,7 @@ def runtest_converter(step):
   rc.deps.add('recipe_engine/path')
   rc.deps.add('recipe_engine/json')
   rc.steps.append('# runtest step')
-  fmtstr = 'api.python("%s", api.path["build"].join("scripts", "slave",'+\
+  fmtstr = 'api.python("%s", api.path["build"].join("scripts", "subordinate",'+\
       '"runtest.py"), args=[%s])'
   rc.steps.append(fmtstr % (step[1]['name'],
     convert_arguments(step[1]['command'].items[2:])))
@@ -708,8 +708,8 @@ def win_runtest_converter(step):
   rc.deps.add('recipe_engine/python')
   rc.deps.add('recipe_engine/path')
   rc.steps.append('# runtest step')
-  fmtstr = 'api.step("%s", ["python_slave", '+\
-      'api.path["build"].join("scripts", "slave", "runtest.py"), %s])'
+  fmtstr = 'api.step("%s", ["python_subordinate", '+\
+      'api.path["build"].join("scripts", "subordinate", "runtest.py"), %s])'
   rc.steps.append(fmtstr % (step[1]['name'],
     convert_arguments(step[1]['command'].items[2:])))
   return rc
@@ -720,7 +720,7 @@ def win_taskkill_converter(step):
   rc.deps.add('recipe_engine/path')
   rc.steps.append('# taskkill step')
   rc.steps.append('api.python("taskkill", api.path["build"].join("scripts", '+\
-      '"slave", "kill_processes.py"))')
+      '"subordinate", "kill_processes.py"))')
   return rc
 
 def win_svnkill_converter(step):
@@ -799,12 +799,12 @@ def bot_update_converter(step):
 
 def bb_run_bot_converter(step):
   rc = recipe_chunk()
-  rc.steps.append('# slave_steps step')
+  rc.steps.append('# subordinate_steps step')
   rc.deps.add('recipe_engine/python')
   rc.deps.add('recipe_engine/json')
   build_properties = "'--build-properties=%s' % " +\
       "api.json.dumps(build_properties, separators=(',', ':'))"
-  fmtstr = 'api.python("slave_steps", "%s", args=[%s, \'%s\'],' +\
+  fmtstr = 'api.python("subordinate_steps", "%s", args=[%s, \'%s\'],' +\
       ' allow_subannotations=True)'
   rc.steps.append(fmtstr % (step[1]['command'][1], build_properties,
                             step[1]['command'][3]))
@@ -817,7 +817,7 @@ def gclient_runhooks_wrapper_converter(step):
   rc.steps.append('# gclient runhooks wrapper step')
   rc.steps.append('env = %s' % repr(step[1]['env']))
   rc.steps.append('api.python("gclient runhooks wrapper", ' +\
-      'api.path["build"].join("scripts", "slave", "runhooks_wrapper.py"), '+\
+      'api.path["build"].join("scripts", "subordinate", "runhooks_wrapper.py"), '+\
       'env=env)')
   return rc
 
@@ -828,7 +828,7 @@ def chromedriver_buildbot_run_converter(step):
   rc.deps.add('recipe_engine/json')
   build_properties = "'--build-properties=%s' % " +\
       "api.json.dumps(build_properties, separators=(',', ':'))"
-  cdbbrun_command = 'api.path["build"].join("scripts", "slave", "chromium", '+\
+  cdbbrun_command = 'api.path["build"].join("scripts", "subordinate", "chromium", '+\
       '"chromedriver_buildbot_run.py")'
   fmtstr = 'api.python("annotated_steps", %s, args=[%s, \'%s\'],' +\
       ' allow_subannotations=True)'
@@ -843,9 +843,9 @@ def win_chromedriver_buildbot_run_converter(step):
   rc.deps.add('recipe_engine/json')
   build_properties = "'--build-properties=%s' % " +\
       "api.json.dumps(build_properties, separators=(',', ':'))"
-  cdbbrun_command = 'api.path["build"].join("scripts", "slave", "chromium", '+\
+  cdbbrun_command = 'api.path["build"].join("scripts", "subordinate", "chromium", '+\
       '"chromedriver_buildbot_run.py")'
-  fmtstr = 'api.step("annotated_steps", ["python_slave", %s, %s, \'%s\'],' +\
+  fmtstr = 'api.step("annotated_steps", ["python_subordinate", %s, %s, \'%s\'],' +\
       ' allow_subannotations=True)'
   rc.steps.append(fmtstr % (cdbbrun_command, build_properties,
                             step[1]['command'][3]))
@@ -858,7 +858,7 @@ def compile_py_converter(step):
   rc.deps.add('recipe_engine/path')
   rc.deps.add('recipe_engine/properties')
   fmtstr = 'api.python("compile", %s, args=args)'
-  compile_command = 'api.path["build"].join("scripts", "slave", "compile.py")'
+  compile_command = 'api.path["build"].join("scripts", "subordinate", "compile.py")'
   args = [x for x in step[1]['command'].items[2:] if isinstance(x, str)]
   rc.steps.append('args = %s' % repr(args))
   for x in step[1]['command'].items[2:]:
@@ -875,7 +875,7 @@ def win_compile_py_converter(step):
   rc.steps.append('# compile.py step')
   rc.deps.add('recipe_engine/path')
   fmtstr = 'api.step("compile", ["%s", %s] + args)'
-  compile_command = 'api.path["build"].join("scripts", "slave", "compile.py")'
+  compile_command = 'api.path["build"].join("scripts", "subordinate", "compile.py")'
   args = [x for x in step[1]['command'].items[2:] if isinstance(x, str)]
   rc.steps.append('args = %s' % repr(args))
   for x in step[1]['command'].items[2:]:
@@ -884,7 +884,7 @@ def win_compile_py_converter(step):
        x.args == ('clobber:+--clobber',):
       rc.steps.append('if api.properties.get("clobber"):')
       rc.steps.append(['args.append("--clobber")'])
-  rc.steps.append(fmtstr % ('python_slave', compile_command))
+  rc.steps.append(fmtstr % ('python_subordinate', compile_command))
   return rc
 
 _step_converters_map = {
@@ -940,8 +940,8 @@ def signature_match(step, signature):
                        'repourl',
                        'branch',
                        'blocksize',
-                       'masterdest',
-                       'slavesrc',
+                       'maindest',
+                       'subordinatesrc',
                        'strip'}
   subset_dictionary_attributes = {'env'}
   special_attributes = {'command'}
@@ -961,7 +961,7 @@ def signature_match(step, signature):
       return base_command == command_signature
     if isinstance(base_command, list):
       return list_startswith(base_command, command_signature)
-    if isinstance(base_command, master.optional_arguments.ListProperties):
+    if isinstance(base_command, main.optional_arguments.ListProperties):
       return list_startswith(base_command.items, command_signature)
     return False
 
@@ -1108,11 +1108,11 @@ def report_builder(c, builder_name):
   return repr_report(report)
 
 
-def name_this_function(c, ActiveMaster, filename=None):
-  if ActiveMaster.project_name not in _master_builder_map:
+def name_this_function(c, ActiveMain, filename=None):
+  if ActiveMain.project_name not in _main_builder_map:
     pass # TODO
   with open(filename, 'w') if filename else sys.stdout as f:
-    for builder in _master_builder_map[ActiveMaster.project_name]:
+    for builder in _main_builder_map[ActiveMain.project_name]:
       f.write(report_builder(c, builder))
       print >> f, 'Match statistics: %s' % repr(builder_match_stats(c, builder))
       print >> f, 'Step statistics: %s' % repr(builder_steps_stats(c, builder))
@@ -1121,8 +1121,8 @@ def name_this_function(c, ActiveMaster, filename=None):
 
 
 class recipe_skeleton(object):
-  def __init__(self, master_name):
-    self.master_name = master_name
+  def __init__(self, main_name):
+    self.main_name = main_name
     self.deps = set()
     # Required to key by buildername.
     self.deps.add('recipe_engine/properties')
@@ -1193,10 +1193,10 @@ class recipe_skeleton(object):
     # Generate tests.
     report.append('def GenTests(api):')
     for builder_name in self.builder_names_to_steps:
-      test_properties = ["api.properties(mastername='%s') +" % self.master_name,
+      test_properties = ["api.properties(mainname='%s') +" % self.main_name,
                          "api.properties(buildername='%s') +" % builder_name,
                          "api.properties(revision='123456789abcdef') +",
-                         "api.properties(slavename='%s')" % "TestSlave",]
+                         "api.properties(subordinatename='%s')" % "TestSubordinate",]
       test = ["yield (api.test('%s') +" % sbn(builder_name)] +\
              [test_properties] +\
              ['      )']
@@ -1204,9 +1204,9 @@ class recipe_skeleton(object):
     test = [
         "yield (api.test('builder_not_in_dispatch_directory') +",
         [
-         "api.properties(mastername='%s') +" % self.master_name,
+         "api.properties(mainname='%s') +" % self.main_name,
          "api.properties(buildername='nonexistent_builder') +",
-         "api.properties(slavename='TestSlave')"
+         "api.properties(subordinatename='TestSubordinate')"
         ],
         "      )",
         ]
@@ -1242,14 +1242,14 @@ def step_to_recipe_chunk(step):
     return dump_converter(step, 'step recognised, no converter found')
   return _step_converters_map[step_type](step)
 
-def write_recipe(c, ActiveMaster, filename=None):
+def write_recipe(c, ActiveMain, filename=None):
   global _GLOBAL_BUILDMASTER_CONFIG
   _GLOBAL_BUILDMASTER_CONFIG = c
-  if ActiveMaster.project_name not in _master_builder_map:
+  if ActiveMain.project_name not in _main_builder_map:
     pass # TODO
-  rs = recipe_skeleton(_master_name_map[ActiveMaster.project_name])
-  rs.generate(c, _master_builder_map[ActiveMaster.project_name])
-  filename = filename or _master_name_map[ActiveMaster.project_name] +\
+  rs = recipe_skeleton(_main_name_map[ActiveMain.project_name])
+  rs.generate(c, _main_builder_map[ActiveMain.project_name])
+  filename = filename or _main_name_map[ActiveMain.project_name] +\
       '.recipe_autogen.py'
   with open(filename, 'w') as f:
     f.write(rs.report_recipe())

@@ -17,7 +17,7 @@ DEPS = [
 ]
 
 
-def build_cipd_packages(api, repo, rev, mastername, buildername, buildnumber):
+def build_cipd_packages(api, repo, rev, mainname, buildername, buildnumber):
   # Path to a service account credentials to use to talk to CIPD backend.
   # Deployed by Puppet.
   if api.platform.is_win:
@@ -38,7 +38,7 @@ def build_cipd_packages(api, repo, rev, mastername, buildername, buildnumber):
 
   # Upload them, attach tags.
   tags = [
-    'buildbot_build:%s/%s/%s' % (mastername, buildername, buildnumber),
+    'buildbot_build:%s/%s/%s' % (mainname, buildername, buildnumber),
     'git_repository:%s' % repo,
     'git_revision:%s' % rev,
   ]
@@ -86,12 +86,12 @@ def build_luci(api):
 
 
 PROPERTIES = {
-  'mastername': Property(),
+  'mainname': Property(),
   'buildername': Property(),
   'buildnumber': Property(default=-1, kind=int),
 }
 
-def RunSteps(api, mastername, buildername, buildnumber):
+def RunSteps(api, mainname, buildername, buildnumber):
   if buildername.startswith('infra-internal-continuous'):
     project_name = 'infra_internal'
     repo_name = 'https://chrome-internal.googlesource.com/infra/infra_internal'
@@ -143,7 +143,7 @@ def RunSteps(api, mastername, buildername, buildnumber):
         ['python', api.path['checkout'].join('go', 'test.py')])
 
   if buildnumber != -1:
-    build_cipd_packages(api, repo_name, rev, mastername, buildername,
+    build_cipd_packages(api, repo_name, rev, mainname, buildername,
                         buildnumber)
   else:
     result = api.step('cipd - not building packages', None)
@@ -173,7 +173,7 @@ def GenTests(api):
     api.properties.git_scheduled(
         buildername='infra-continuous',
         buildnumber=123,
-        mastername='chromium.infra',
+        mainname='chromium.infra',
         repository='https://chromium.googlesource.com/infra/infra',
     ) +
     api.override_step_data(
@@ -184,7 +184,7 @@ def GenTests(api):
     api.properties.git_scheduled(
         buildername='infra-continuous',
         buildnumber=123,
-        mastername='chromium.infra',
+        mainname='chromium.infra',
         repository='https://chromium.googlesource.com/infra/infra',
     ) +
     api.platform.name('win')
@@ -194,7 +194,7 @@ def GenTests(api):
     api.properties.git_scheduled(
         buildername='infra-internal-continuous',
         buildnumber=123,
-        mastername='internal.infra',
+        mainname='internal.infra',
         repository=
             'https://chrome-internal.googlesource.com/infra/infra_internal',
     ) +
@@ -206,7 +206,7 @@ def GenTests(api):
     api.properties.git_scheduled(
         buildername='infra-continuous-64',
         buildnumber=123,
-        mastername='chromium.infra',
+        mainname='chromium.infra',
         repository='https://chromium.googlesource.com/infra/infra',
     )
   )
@@ -216,7 +216,7 @@ def GenTests(api):
     api.properties.git_scheduled(
         buildername='infra-continuous-32',
         buildnumber=-1,
-        mastername='chromium.infra',
+        mainname='chromium.infra',
         repository='https://chromium.googlesource.com/infra/infra',
     )
   )

@@ -22,11 +22,11 @@ DEPS = [
 
 CT_SKPS_ISOLATE = 'ct_skps.isolate'
 
-# Do not batch archive more slaves than this value. This is used to prevent
+# Do not batch archive more subordinates than this value. This is used to prevent
 # no output timeouts in the 'isolate tests' step.
 MAX_SLAVES_TO_BATCHARCHIVE = 100
 
-# Number of slaves to shard CT runs to.
+# Number of subordinates to shard CT runs to.
 DEFAULT_CT_NUM_SLAVES = 100
 
 # The SKP repository to use.
@@ -66,13 +66,13 @@ def RunSteps(api):
   skia.revision = (api.properties.get('parent_got_revision') or
                    api.properties.get('orig_revision') or
                    api.properties.get('revision') or
-                   'origin/master')
+                   'origin/main')
   gclient_cfg.got_revision_mapping['skia'] = 'got_revision'
 
   src = gclient_cfg.solutions.add()
   src.name = 'src'
   src.url = 'https://chromium.googlesource.com/chromium/src.git'
-  src.revision = 'origin/master'  # Always checkout Chromium at ToT.
+  src.revision = 'origin/main'  # Always checkout Chromium at ToT.
 
   update_step = api.gclient.checkout(gclient_config=gclient_cfg)
   skia_hash = update_step.presentation.properties['got_revision']
@@ -88,7 +88,7 @@ def RunSteps(api):
   # Setup Go isolate binary.
   api.ct_swarming.setup_go_isolate()
 
-  chromium_checkout = api.path['slave_build'].join('src')
+  chromium_checkout = api.path['subordinate_build'].join('src')
 
   # Apply issue to the Skia checkout if this is a trybot run.
   api.tryserver.maybe_apply_issue()
@@ -100,7 +100,7 @@ def RunSteps(api):
 
   skps_chromium_build = api.properties.get(
       'skps_chromium_build', DEFAULT_SKPS_CHROMIUM_BUILD)
-  ct_num_slaves = api.properties.get('ct_num_slaves', DEFAULT_CT_NUM_SLAVES)
+  ct_num_subordinates = api.properties.get('ct_num_subordinates', DEFAULT_CT_NUM_SLAVES)
 
   # Set build property to make finding SKPs convenient.
   api.step.active_result.presentation.properties['Location of SKPs'] = (
@@ -110,36 +110,36 @@ def RunSteps(api):
   # Delete swarming_temp_dir to ensure it starts from a clean slate.
   api.file.rmtree('swarming temp dir', api.ct_swarming.swarming_temp_dir)
 
-  for slave_num in range(1, ct_num_slaves + 1):
+  for subordinate_num in range(1, ct_num_subordinates + 1):
     # Download SKPs.
     api.ct_swarming.download_skps(
-        ct_page_type, slave_num, skps_chromium_build,
-        api.path['slave_build'].join('skps'))
+        ct_page_type, subordinate_num, skps_chromium_build,
+        api.path['subordinate_build'].join('skps'))
 
-    # Create this slave's isolated.gen.json file to use for batcharchiving.
+    # Create this subordinate's isolated.gen.json file to use for batcharchiving.
     isolate_dir = chromium_checkout.join('chrome')
     isolate_path = isolate_dir.join(CT_SKPS_ISOLATE)
     extra_variables = {
-        'SLAVE_NUM': str(slave_num),
+        'SLAVE_NUM': str(subordinate_num),
         'TOOL_NAME': skia_tool,
         'GIT_HASH': skia_hash,
         'CONFIGURATION': configuration,
     }
     api.ct_swarming.create_isolated_gen_json(
-        isolate_path, isolate_dir, 'linux', slave_num, extra_variables)
+        isolate_path, isolate_dir, 'linux', subordinate_num, extra_variables)
 
   # Batcharchive everything on the isolate server for efficiency.
-  max_slaves_to_batcharchive = MAX_SLAVES_TO_BATCHARCHIVE
+  max_subordinates_to_batcharchive = MAX_SLAVES_TO_BATCHARCHIVE
   if '1m' in buildername:
     # Break up the "isolate tests" step into batches with <100k files due to
     # https://github.com/luci/luci-go/issues/9
-    max_slaves_to_batcharchive = 5
+    max_subordinates_to_batcharchive = 5
   swarm_hashes = []
-  for slave_start_num in xrange(1, ct_num_slaves+1, max_slaves_to_batcharchive):
+  for subordinate_start_num in xrange(1, ct_num_subordinates+1, max_subordinates_to_batcharchive):
     api.ct_swarming.batcharchive(
-        num_slaves=min(
-            max_slaves_to_batcharchive + slave_start_num - 1, ct_num_slaves),
-        slave_start_num=slave_start_num)
+        num_subordinates=min(
+            max_subordinates_to_batcharchive + subordinate_start_num - 1, ct_num_subordinates),
+        subordinate_start_num=subordinate_start_num)
     swarm_hashes.extend(
         api.step.active_result.presentation.properties['swarm_hashes'].values())
 
@@ -154,15 +154,15 @@ def RunSteps(api):
 
   # Now collect all tasks.
   failed_tasks = []
-  slave_num = 0
+  subordinate_num = 0
   for task in tasks:
     try:
-      slave_num += 1
+      subordinate_num += 1
       api.ct_swarming.collect_swarming_task(task)
 
       if skia_tool == 'nanobench':
         output_dir = api.ct_swarming.tasks_output_dir.join(
-            'slave%s' % slave_num).join('0')
+            'subordinate%s' % subordinate_num).join('0')
         utc = api.time.utcnow()
         gs_dest_dir = 'ct/10k/%d/%02d/%02d/%02d/' % (
             utc.year, utc.month, utc.day, utc.hour)
@@ -187,14 +187,14 @@ def RunSteps(api):
 
 
 def GenTests(api):
-  ct_num_slaves = 5
+  ct_num_subordinates = 5
   skia_revision = 'abc123'
 
   yield(
     api.test('CT_DM_10k_SKPs') +
     api.properties(
         buildername='Test-Ubuntu-GCC-GCE-CPU-AVX2-x86_64-Debug-CT_DM_10k_SKPs',
-        ct_num_slaves=ct_num_slaves,
+        ct_num_subordinates=ct_num_subordinates,
         revision=skia_revision,
     )
   )
@@ -204,7 +204,7 @@ def GenTests(api):
     api.properties(
         buildername=
             'Perf-Ubuntu-GCC-GCE-CPU-AVX2-x86_64-Release-CT_BENCH_10k_SKPs',
-        ct_num_slaves=ct_num_slaves,
+        ct_num_subordinates=ct_num_subordinates,
         revision=skia_revision,
     )
   )
@@ -213,7 +213,7 @@ def GenTests(api):
     api.test('CT_DM_1m_SKPs') +
     api.properties(
         buildername='Test-Ubuntu-GCC-GCE-CPU-AVX2-x86_64-Debug-CT_DM_1m_SKPs',
-        ct_num_slaves=ct_num_slaves,
+        ct_num_subordinates=ct_num_subordinates,
         revision=skia_revision,
     )
   )
@@ -223,7 +223,7 @@ def GenTests(api):
     api.properties(
         buildername=
             'Test-Ubuntu-GCC-GCE-CPU-AVX2-x86_64-Debug-CT_DM_UnknownRepo_SKPs',
-        ct_num_slaves=ct_num_slaves,
+        ct_num_subordinates=ct_num_subordinates,
         revision=skia_revision,
     ) +
     api.expect_exception('Exception')
@@ -234,29 +234,29 @@ def GenTests(api):
     api.properties(
         buildername=
             'Test-Ubuntu-GCC-GCE-CPU-AVX2-x86_64-Debug-CT_UnknownTool_10k_SKPs',
-        ct_num_slaves=ct_num_slaves,
+        ct_num_subordinates=ct_num_subordinates,
         revision=skia_revision,
     ) +
     api.expect_exception('Exception')
   )
 
   yield(
-    api.test('CT_DM_10k_SKPs_slave3_failure') +
+    api.test('CT_DM_10k_SKPs_subordinate3_failure') +
     api.step_data('ct-10k-dm-3 on Ubuntu-14.04', retcode=1) +
     api.properties(
         buildername='Test-Ubuntu-GCC-GCE-CPU-AVX2-x86_64-Debug-CT_DM_10k_SKPs',
-        ct_num_slaves=ct_num_slaves,
+        ct_num_subordinates=ct_num_subordinates,
         revision=skia_revision,
     )
   )
 
   yield(
-    api.test('CT_DM_10k_SKPs_2slaves_failure') +
+    api.test('CT_DM_10k_SKPs_2subordinates_failure') +
     api.step_data('ct-10k-dm-1 on Ubuntu-14.04', retcode=1) +
     api.step_data('ct-10k-dm-3 on Ubuntu-14.04', retcode=1) +
     api.properties(
         buildername='Test-Ubuntu-GCC-GCE-CPU-AVX2-x86_64-Debug-CT_DM_10k_SKPs',
-        ct_num_slaves=ct_num_slaves,
+        ct_num_subordinates=ct_num_subordinates,
         revision=skia_revision,
     )
   )
@@ -266,7 +266,7 @@ def GenTests(api):
     api.properties(
         buildername=
             'Test-Ubuntu-GCC-GCE-CPU-AVX2-x86_64-Debug-CT_DM_10k_SKPs-Trybot',
-        ct_num_slaves=ct_num_slaves,
+        ct_num_subordinates=ct_num_subordinates,
         rietveld='codereview.chromium.org',
         issue=1499623002,
         patchset=1,

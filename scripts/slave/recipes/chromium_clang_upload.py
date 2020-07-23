@@ -38,7 +38,7 @@ BUILDERS = freeze({
 
 
 def RunSteps(api):
-  mastername = api.m.properties['mastername']
+  mainname = api.m.properties['mainname']
   buildername, bot_config = api.chromium.configure_bot(BUILDERS, ['mb'])
 
   api.bot_update.ensure_checkout(
@@ -46,7 +46,7 @@ def RunSteps(api):
 
   api.chromium.runhooks()
 
-  api.chromium.run_mb(mastername, buildername)
+  api.chromium.run_mb(mainname, buildername)
 
   api.python(
       'package clang',

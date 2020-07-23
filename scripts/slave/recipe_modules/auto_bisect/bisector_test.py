@@ -44,7 +44,7 @@ class MockRevisionClass(object):  # pragma: no cover
     return {}
 
 
-@mock.patch.object(Bisector, 'ensure_sync_master_branch', mock.MagicMock())
+@mock.patch.object(Bisector, 'ensure_sync_main_branch', mock.MagicMock())
 class BisectorTest(unittest.TestCase):  # pragma: no cover
 
   def setUp(self):
@@ -59,7 +59,7 @@ class BisectorTest(unittest.TestCase):  # pragma: no cover
         'max_time_minutes': '5',
         'bug_id': '425582',
         'gs_bucket': 'chrome-perf',
-        'builder_host': 'master4.golo.chromium.org',
+        'builder_host': 'main4.golo.chromium.org',
         'builder_port': '8341',
         'dummy_builds': True,
     }

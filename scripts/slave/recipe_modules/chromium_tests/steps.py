@@ -389,7 +389,7 @@ def get_args_for_test(api, chromium_tests_api, test_spec, bot_update_step):
   return [string.Template(arg).safe_substitute(substitutions) for arg in args]
 
 
-def generate_gtest(api, chromium_tests_api, mastername, buildername, test_spec,
+def generate_gtest(api, chromium_tests_api, mainname, buildername, test_spec,
                    bot_update_step, enable_swarming=False,
                    swarming_dimensions=None, scripts_compile_targets=None):
   def canonicalize_test(test):
@@ -445,7 +445,7 @@ def generate_gtest(api, chromium_tests_api, mastername, buildername, test_spec,
                       override_compile_targets=override_compile_targets)
 
 
-def generate_instrumentation_test(api, chromium_tests_api, mastername,
+def generate_instrumentation_test(api, chromium_tests_api, mainname,
                                   buildername, test_spec, bot_update_step,
                                   enable_swarming=False,
                                   swarming_dimensions=None,
@@ -473,7 +473,7 @@ def generate_instrumentation_test(api, chromium_tests_api, mastername,
           additional_apks=test.get('additional_apks', None))
 
 
-def generate_script(api, chromium_tests_api, mastername, buildername, test_spec,
+def generate_script(api, chromium_tests_api, mainname, buildername, test_spec,
                     bot_update_step, enable_swarming=False,
                     swarming_dimensions=None, scripts_compile_targets=None):
   for script_spec in test_spec.get(buildername, {}).get('scripts', []):
@@ -1201,7 +1201,7 @@ class SwarmingIsolatedScriptTest(SwarmingTest):
     return valid, failures
 
 
-def generate_isolated_script(api, chromium_tests_api, mastername, buildername,
+def generate_isolated_script(api, chromium_tests_api, mainname, buildername,
                              test_spec, bot_update_step, enable_swarming=False,
                              swarming_dimensions=None,
                              scripts_compile_targets=None):
@@ -1657,7 +1657,7 @@ class BlinkTest(Test):
     return True
 
   def run(self, api, suffix, test_filter=None):
-    results_dir = api.path['slave_build'].join('layout-test-results')
+    results_dir = api.path['subordinate_build'].join('layout-test-results')
 
     args = [
         '--target', api.chromium.c.BUILD_CONFIG,
@@ -1679,7 +1679,7 @@ class BlinkTest(Test):
 
     try:
       step_result = api.chromium.runtest(
-          api.path['build'].join('scripts', 'slave', 'chromium',
+          api.path['build'].join('scripts', 'subordinate', 'chromium',
                                  'layout_test_wrapper.py'),
           args, name=self._step_name(suffix),
           # TODO(phajdan.jr): Clean up the runtest.py mess.
@@ -1712,7 +1712,7 @@ class BlinkTest(Test):
         buildnumber = api.properties['buildnumber']
 
         archive_layout_test_results = api.path['build'].join(
-            'scripts', 'slave', 'chromium', 'archive_layout_test_results.py')
+            'scripts', 'subordinate', 'chromium', 'archive_layout_test_results.py')
 
         archive_layout_test_args = [
           '--results-dir', results_dir,

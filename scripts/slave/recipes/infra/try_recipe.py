@@ -49,7 +49,7 @@ def RunSteps(api):
   properties = dict((str(k), str(v)) for k, v in properties.iteritems())
 
   properties.setdefault('try_level', level + 1)
-  for attr in ['buildername', 'mastername', 'buildnumber', 'slavename']:
+  for attr in ['buildername', 'mainname', 'buildnumber', 'subordinatename']:
     properties.setdefault(attr, api.properties.get(attr))
 
   step = api.step('properties (%d)' % level, cmd=None)
@@ -63,7 +63,7 @@ def RunSteps(api):
         '--base-level', str(level + 1),
         '--use-python-executable',
         '--',
-        api.path['checkout'].join('scripts', 'slave', 'recipes.py'),
+        api.path['checkout'].join('scripts', 'subordinate', 'recipes.py'),
         'run',
         '--properties-file',
         api.json.input(properties),
@@ -77,7 +77,7 @@ def GenTests(api):
   yield (
       api.test('default') +
       api.properties.tryserver(
-          mastername='tryserver.infra',
+          mainname='tryserver.infra',
           buildername='recipe_try',
           try_recipe='infra/build_repo_real_try',
           try_props=encode({
@@ -89,7 +89,7 @@ def GenTests(api):
   yield (
       api.test('recursion') +
       api.properties.tryserver(
-          mastername='tryserver.infra',
+          mainname='tryserver.infra',
           buildername='recipe_try',
           try_recipe='infra/try_other_recipe',
           try_level='1',

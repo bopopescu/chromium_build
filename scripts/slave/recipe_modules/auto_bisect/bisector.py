@@ -75,7 +75,7 @@ class Bisector(object):
     """
     super(Bisector, self).__init__()
     self._api = api
-    self.ensure_sync_master_branch()
+    self.ensure_sync_main_branch()
     self.bisect_config = bisect_config
     self.config_step()
     self.revision_class = revision_class
@@ -866,18 +866,18 @@ class Bisector(object):
 
     return 'gs://chrome-perf/Linux Builder/full-build-linux_'
 
-  def ensure_sync_master_branch(self):
-    """Make sure the local master is in sync with the fetched origin/master.
+  def ensure_sync_main_branch(self):
+    """Make sure the local main is in sync with the fetched origin/main.
 
-    We have seen on several occasions that the local master branch gets reset
+    We have seen on several occasions that the local main branch gets reset
     to previous revisions and also detached head states. Running this should
     take care of either situation.
     """
     # TODO(robertocn): Investigate what causes the states mentioned in the
     # docstring in the first place.
-    self.api.m.git('update-ref', 'refs/heads/master',
-                   'refs/remotes/origin/master')
-    self.api.m.git('checkout', 'master', cwd=self.api.m.path['checkout'])
+    self.api.m.git('update-ref', 'refs/heads/main',
+                   'refs/remotes/origin/main')
+    self.api.m.git('checkout', 'main', cwd=self.api.m.path['checkout'])
 
   def is_return_code_mode(self):
     """Checks whether this is a bisect on the test's exit code."""

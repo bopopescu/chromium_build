@@ -108,12 +108,12 @@ class SkiaApi(recipe_api.RecipeApi):
     self.failed = []
 
     self.builder_name = self.m.properties['buildername']
-    self.master_name = self.m.properties['mastername']
-    self.slave_name = self.m.properties['slavename']
+    self.main_name = self.m.properties['mainname']
+    self.subordinate_name = self.m.properties['subordinatename']
 
     self.default_env = {}
-    self.slave_dir = self.m.path['slave_build']
-    self.skia_dir = self.slave_dir.join('skia')
+    self.subordinate_dir = self.m.path['subordinate_build']
+    self.skia_dir = self.subordinate_dir.join('skia')
 
     # Check out the Skia code.
     self.checkout_steps()
@@ -132,10 +132,10 @@ class SkiaApi(recipe_api.RecipeApi):
       self.home_dir = '[HOME]'
     self.perf_data_dir = None
     self.resource_dir = self.skia_dir.join('resources')
-    self.images_dir = self.slave_dir.join('images')
-    self.local_skp_dir = self.slave_dir.join('playback', 'skps')
+    self.images_dir = self.subordinate_dir.join('images')
+    self.local_skp_dir = self.subordinate_dir.join('playback', 'skps')
     self.out_dir = self.m.path['checkout'].join('out', self.builder_name)
-    self.tmp_dir = self.m.path['slave_build'].join('tmp')
+    self.tmp_dir = self.m.path['subordinate_build'].join('tmp')
 
     self.gsutil_env_chromium_skia_gm = self.gsutil_env(BOTO_CHROMIUM_SKIA_GM)
     # TODO(borenet): This works on GCE instance because we fall back on
@@ -158,7 +158,7 @@ class SkiaApi(recipe_api.RecipeApi):
     self.is_trybot = self.builder_cfg['is_trybot']
     self.upload_dm_results = self.builder_spec['upload_dm_results']
     self.upload_perf_results = self.builder_spec['upload_perf_results']
-    self.perf_data_dir = self.slave_dir.join('perfdata', self.builder_name,
+    self.perf_data_dir = self.subordinate_dir.join('perfdata', self.builder_name,
                                              'data')
     self.dm_flags = self.builder_spec['dm_flags']
     self.nanobench_flags = self.builder_spec['nanobench_flags']
@@ -445,7 +445,7 @@ print json.dumps({'ccache': ccache})
     if self.upload_dm_results:
       # This must run before we write anything into self.device_dirs.dm_dir
       # or we may end up deleting our output on machines where they're the same.
-      host_dm_dir = self.m.path['slave_build'].join('dm')
+      host_dm_dir = self.m.path['subordinate_build'].join('dm')
       self.flavor.create_clean_host_dir(host_dm_dir)
       if str(host_dm_dir) != str(self.device_dirs.dm_dir):
         self.flavor.create_clean_device_dir(self.device_dirs.dm_dir)
@@ -501,7 +501,7 @@ print json.dumps({'ccache': ccache})
     # Run DM.
     properties = [
       'gitHash',      self.got_revision,
-      'master',       self.master_name,
+      'main',       self.main_name,
       'builder',      self.builder_name,
       'build_number', self.m.properties['buildnumber'],
     ]
@@ -556,7 +556,7 @@ print json.dumps({'ccache': ccache})
                  self.builder_name,
                  self.m.properties['buildnumber'],
                  self.m.properties['issue'] if self.is_trybot else '',
-                 self.m.path['slave_build'].join("skia", "common", "py", "utils"),
+                 self.m.path['subordinate_build'].join("skia", "common", "py", "utils"),
                ],
                cwd=self.m.path['checkout'],
                env=self.gsutil_env_chromium_skia_gm,

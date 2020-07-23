@@ -18,13 +18,13 @@ def RunSteps(api):
 
   api.ios.host_info()
   api.bot_update.ensure_checkout()
-  api.path['checkout'] = api.path['slave_build'].join('src')
+  api.path['checkout'] = api.path['subordinate_build'].join('src')
 
   build_config_dir = api.path['checkout'].join(
       'webrtc',
       'build',
       'ios',
-      api.properties['mastername'],
+      api.properties['mainname'],
   )
   include_dir = api.path['checkout'].join(
       'webrtc',
@@ -47,8 +47,8 @@ def GenTests(api):
     + api.properties(
       buildername='ios debug',
       buildnumber='0',
-      mastername='chromium.fake',
-      slavename='fake-vm',
+      mainname='chromium.fake',
+      subordinatename='fake-vm',
     )
     + api.ios.make_test_build_config({
       'xcode version': 'fake xcode version',
@@ -81,8 +81,8 @@ def GenTests(api):
     + api.properties(
       buildername='ios',
       buildnumber='0',
-      mastername='chromium.fake',
-      slavename='fake-vm',
+      mainname='chromium.fake',
+      subordinatename='fake-vm',
     )
     + api.ios.make_test_build_config({
       'xcode version': 'fake xcode version',
@@ -105,8 +105,8 @@ def GenTests(api):
     + api.properties(
       buildername='ios',
       buildnumber='0',
-      mastername='chromium.fake',
-      slavename='fake-vm',
+      mainname='chromium.fake',
+      subordinatename='fake-vm',
     )
     + api.ios.make_test_build_config({
       'xcode version': 'fake xcode version',
@@ -131,8 +131,8 @@ def GenTests(api):
     + api.properties(
       buildername='ios',
       buildnumber='0',
-      mastername='chromium.fake',
-      slavename='fake-vm',
+      mainname='chromium.fake',
+      subordinatename='fake-vm',
     )
     + api.ios.make_test_build_config({
       'xcode version': 'fake xcode version',
@@ -168,8 +168,8 @@ def GenTests(api):
     + api.properties(
       buildername='ios',
       buildnumber='0',
-      mastername='chromium.fake',
-      slavename='fake-vm',
+      mainname='chromium.fake',
+      subordinatename='fake-vm',
     )
     + api.ios.make_test_build_config({
       'xcode version': 'fake xcode version',

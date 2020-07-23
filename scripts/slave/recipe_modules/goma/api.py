@@ -9,8 +9,8 @@ class GomaApi(recipe_api.RecipeApi):
 
   def update_goma_canary(self):
     """Returns a step for updating goma canary."""
-    # for git checkout, should use @refs/heads/master to use head.
-    head = 'refs/heads/master'
+    # for git checkout, should use @refs/heads/main to use head.
+    head = 'refs/heads/main'
     self.m.gclient('update goma canary',
                    ['sync', '--verbose', '--force',
                     '--revision', 'build/goma@%s' % head],

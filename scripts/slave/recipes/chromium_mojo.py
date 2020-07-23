@@ -61,7 +61,7 @@ def RunSteps(api):
 
   api.chromium.runhooks()
 
-  api.chromium.run_mb(api.properties.get('mastername'),
+  api.chromium.run_mb(api.properties.get('mainname'),
                       api.properties.get('buildername'),
                       use_goma=True)
 

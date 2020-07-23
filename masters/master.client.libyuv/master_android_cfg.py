@@ -4,14 +4,14 @@
 
 from buildbot.schedulers.basic import SingleBranchScheduler
 
-from master.factory import annotator_factory
+from main.factory import annotator_factory
 
 m_annotator = annotator_factory.AnnotatorFactory()
 
 def Update(c):
   c['schedulers'].extend([
       SingleBranchScheduler(name='libyuv_android_scheduler',
-                            branch='master',
+                            branch='main',
                             treeStableTimer=0,
                             builderNames=[
           'Android Debug',
@@ -24,8 +24,8 @@ def Update(c):
   specs = [
     {'name': 'Android Debug'},
     {'name': 'Android Release'},
-    {'name': 'Android Clang Debug', 'slavebuilddir': 'android_clang'},
-    {'name': 'Android ARM64 Debug', 'slavebuilddir': 'android_arm64'},
+    {'name': 'Android Clang Debug', 'subordinatebuilddir': 'android_clang'},
+    {'name': 'Android ARM64 Debug', 'subordinatebuilddir': 'android_arm64'},
   ]
 
   c['builders'].extend([
@@ -34,6 +34,6 @@ def Update(c):
         'factory': m_annotator.BaseFactory('libyuv/libyuv'),
         'notify_on_missing': True,
         'category': 'android',
-        'slavebuilddir': spec.get('slavebuilddir', 'android'),
+        'subordinatebuilddir': spec.get('subordinatebuilddir', 'android'),
       } for spec in specs
   ])

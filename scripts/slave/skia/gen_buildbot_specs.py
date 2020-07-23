@@ -108,8 +108,8 @@ def main(buildbot_spec_path):
   skia_recipe = os.path.join(cwd, os.pardir, 'recipes', 'skia', 'skia.py')
   skia = imp.load_source('skia', skia_recipe)
   bots = []
-  for _, slaves in skia.TEST_BUILDERS.iteritems():
-    for _, builders in slaves.iteritems():
+  for _, subordinates in skia.TEST_BUILDERS.iteritems():
+    for _, builders in subordinates.iteritems():
       bots.extend(builders)
   bots.sort()
 

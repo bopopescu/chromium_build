@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-from master.factory import annotator_factory
+from main.factory import annotator_factory
 
 from buildbot.schedulers.basic import SingleBranchScheduler
 
@@ -16,10 +16,10 @@ builders = [{
 } for board in ('x86-generic', 'amd64-generic', 'daisy')]
 
 
-def Update(_config, active_master, c):
+def Update(_config, active_main, c):
   c['schedulers'].append(SingleBranchScheduler(
       name='chromium_simplechrome',
-      branch='master',
+      branch='main',
       treeStableTimer=60,
       builderNames=[b['name'] for b in builders]
   ))

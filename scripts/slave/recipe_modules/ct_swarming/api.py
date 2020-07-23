@@ -15,12 +15,12 @@ class CTSwarmingApi(recipe_api.RecipeApi):
   @property
   def downloads_dir(self):
     """Path to where artifacts should be downloaded from Google Storage."""
-    return self.m.path['slave_build'].join('src', 'content', 'test', 'ct')
+    return self.m.path['subordinate_build'].join('src', 'content', 'test', 'ct')
 
   @property
   def swarming_temp_dir(self):
     """Path where artifacts like isolate file and json output will be stored."""
-    return self.m.path['slave_build'].join('swarming_temp_dir')
+    return self.m.path['subordinate_build'].join('swarming_temp_dir')
 
   @property
   def tasks_output_dir(self):
@@ -42,12 +42,12 @@ class CTSwarmingApi(recipe_api.RecipeApi):
     """Generates and puts in place the isolate Go binary."""
     # Run 'gclient runhooks' on the chromium checkout to generate the binary.
     self.m.step('gclient runhooks', ['gclient', 'runhooks'],
-                cwd=self.m.path['slave_build'].join('src'))
+                cwd=self.m.path['subordinate_build'].join('src'))
     # Copy binaries to the expected location.
-    dest = self.m.path['slave_build'].join('luci-go')
+    dest = self.m.path['subordinate_build'].join('luci-go')
     self.m.file.rmtree('Go binary dir', dest)
     self.m.file.copytree('Copy Go binary',
-                         source=self.m.path['slave_build'].join(
+                         source=self.m.path['subordinate_build'].join(
                              'src', 'tools', 'luci-go'),
                          dest=dest)
 
@@ -70,23 +70,23 @@ os.chmod('%s', os.stat('%s').st_mode | stat.S_IEXEC)
 ''' % (str(binary_dest), str(binary_dest))
     )
 
-  def download_page_artifacts(self, page_type, slave_num):
+  def download_page_artifacts(self, page_type, subordinate_num):
     """Downloads all the artifacts needed to run benchmarks on a page.
 
     The artifacts are downloaded into subdirectories in the downloads_dir.
 
     Args:
       page_type: str. The CT page type. Eg: 1k, 10k.
-      slave_num: int. The number of the slave used to determine which GS
-                 directory to download from. Eg: for the top 1k, slave1 will
-                 contain webpages 1-10, slave2 will contain 11-20.
+      subordinate_num: int. The number of the subordinate used to determine which GS
+                 directory to download from. Eg: for the top 1k, subordinate1 will
+                 contain webpages 1-10, subordinate2 will contain 11-20.
     """
     # Download page sets.
-    page_sets_dir = self.downloads_dir.join('slave%s' % slave_num, 'page_sets')
+    page_sets_dir = self.downloads_dir.join('subordinate%s' % subordinate_num, 'page_sets')
     self.m.file.makedirs('page_sets dir', page_sets_dir)
     self.m.gsutil.download(
         bucket=self.CT_GS_BUCKET,
-        source='swarming/page_sets/%s/slave%s/*' % (page_type, slave_num),
+        source='swarming/page_sets/%s/subordinate%s/*' % (page_type, subordinate_num),
         dest=page_sets_dir)
 
     # Download archives.
@@ -94,31 +94,31 @@ os.chmod('%s', os.stat('%s').st_mode | stat.S_IEXEC)
     self.m.file.makedirs('WPR dir', wpr_dir)
     self.m.gsutil.download(
         bucket=self.CT_GS_BUCKET,
-        source='swarming/webpage_archives/%s/slave%s/*' % (page_type,
-                                                           slave_num),
+        source='swarming/webpage_archives/%s/subordinate%s/*' % (page_type,
+                                                           subordinate_num),
         dest=wpr_dir)
 
-  def download_skps(self, page_type, slave_num, skps_chromium_build, dest_dir):
-    """Downloads SKPs corresponding to the specified page type, slave and build.
+  def download_skps(self, page_type, subordinate_num, skps_chromium_build, dest_dir):
+    """Downloads SKPs corresponding to the specified page type, subordinate and build.
 
     The SKPs are downloaded into subdirectories in the downloads_dir.
 
     Args:
       page_type: str. The CT page type. Eg: 1k, 10k.
-      slave_num: int. The number of the slave used to determine which GS
-                 directory to download from. Eg: for the top 1k, slave1 will
-                 contain SKPs from webpages 1-10, slave2 will contain 11-20.
+      subordinate_num: int. The number of the subordinate used to determine which GS
+                 directory to download from. Eg: for the top 1k, subordinate1 will
+                 contain SKPs from webpages 1-10, subordinate2 will contain 11-20.
       skps_chromium_build: str. The build the SKPs were captured from.
       dest_dir: path obj. The directory to download SKPs into.
     """
-    skps_dir = dest_dir.join('slave%s' % slave_num)
+    skps_dir = dest_dir.join('subordinate%s' % subordinate_num)
     self.m.file.makedirs('SKPs dir', skps_dir)
-    full_source = 'gs://%s/skps/%s/%s/slave%s' % (
-        self.CT_GS_BUCKET, page_type, skps_chromium_build, slave_num)
+    full_source = 'gs://%s/skps/%s/%s/subordinate%s' % (
+        self.CT_GS_BUCKET, page_type, skps_chromium_build, subordinate_num)
     self.m.gsutil(['-m', 'rsync', '-d', '-r', full_source, skps_dir])
 
   def create_isolated_gen_json(self, isolate_path, base_dir, os_type,
-                               slave_num, extra_variables):
+                               subordinate_num, extra_variables):
     """Creates an isolated.gen.json file.
 
     Args:
@@ -126,7 +126,7 @@ os.chmod('%s', os.stat('%s').st_mode | stat.S_IEXEC)
       base_dir: path obj. Dir that is the base of all paths in the isolate file.
       os_type: str. The OS type to use when archiving the isolate file.
                Eg: linux.
-      slave_num: int. The slave we want to create isolated.gen.json file for.
+      subordinate_num: int. The subordinate we want to create isolated.gen.json file for.
       extra_variables: dict of str to str. The extra vars to pass to isolate.
                       Eg: {'SLAVE_NUM': '1', 'MASTER': 'ChromiumPerfFYI'}
 
@@ -135,7 +135,7 @@ os.chmod('%s', os.stat('%s').st_mode | stat.S_IEXEC)
     """
     self.m.file.makedirs('swarming tmp dir', self.swarming_temp_dir)
     isolated_path = self.swarming_temp_dir.join(
-        'ct-task-%s.isolated' % slave_num)
+        'ct-task-%s.isolated' % subordinate_num)
     isolate_args = [
       '--isolate', isolate_path,
       '--isolated', isolated_path,
@@ -149,26 +149,26 @@ os.chmod('%s', os.stat('%s').st_mode | stat.S_IEXEC)
       'args': isolate_args,
     }
     isolated_gen_json = self.swarming_temp_dir.join(
-        'slave%s.isolated.gen.json' % slave_num)
+        'subordinate%s.isolated.gen.json' % subordinate_num)
     self.m.file.write(
-        'Write slave%s.isolated.gen.json' % slave_num,
+        'Write subordinate%s.isolated.gen.json' % subordinate_num,
         isolated_gen_json,
         self.m.json.dumps(isolated_gen_dict, indent=4),
     )
 
-  def batcharchive(self, num_slaves, slave_start_num=1):
+  def batcharchive(self, num_subordinates, subordinate_start_num=1):
     """Calls batcharchive on the specified isolated.gen.json files.
 
     Args:
-      num_slaves: int. The number of slaves we will batcharchive
+      num_subordinates: int. The number of subordinates we will batcharchive
                   isolated.gen.json files for.
-      slave_start_num: int. Which slave number to start with. Optional.
+      subordinate_start_num: int. Which subordinate number to start with. Optional.
     """
     self.m.isolate.isolate_tests(
         verbose=True,  # To avoid no output timeouts.
         build_dir=self.swarming_temp_dir,
         targets=[
-            'slave%s' % num for num in xrange(slave_start_num, num_slaves+1)])
+            'subordinate%s' % num for num in xrange(subordinate_start_num, num_subordinates+1)])
 
   def trigger_swarming_tasks(self, swarm_hashes, task_name_prefix, dimensions):
     """Triggers swarming tasks using swarm hashes.
@@ -186,7 +186,7 @@ os.chmod('%s', os.stat('%s').st_mode | stat.S_IEXEC)
       swarming_task = self.m.swarming.task(
           title='%s-%s' % (task_name_prefix, task_num+1),
           isolated_hash=swarm_hash,
-          task_output_dir=self.tasks_output_dir.join('slave%s' % (task_num+1)))
+          task_output_dir=self.tasks_output_dir.join('subordinate%s' % (task_num+1)))
       swarming_task.dimensions = dimensions
       swarming_task.priority = 90
       swarming_task.expiration = 4*60*60
